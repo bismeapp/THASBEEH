@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#065032">
+<title>BISME RADIO – Tasbeeh Counter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Optional: put the KFGQPC Uthmanic Hafs font file next to this HTML, renamed to uthmanic-hafs.ttf */
+@font-face{
+  font-family:"KFGQPC Uthmanic Script HAFS";
+  src:local("KFGQPC Uthmanic Script HAFS"),local("KFGQPC HAFS Uthmanic Script"),url("uthmanic-hafs.ttf") format("truetype");
+  font-display:swap;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+:root{
+  --g-primary:#006044;--g-sec:#004B38;--g-dark:#003A2C;
+  --gold-l:#F5D078;--gold:#E6C66B;--gold-m:#C49A45;--gold-d:#A77A2E;
+  --tx:#F5F5EE;--tx2:#D0DAD4;--tx3:#AEBDB5;--tx-gold:#12382B;
+  --bd-gold:rgba(230,198,107,.35);--bd-w:rgba(255,255,255,.12);
+  --gold-grad:linear-gradient(135deg,#A77A2E,#E6C66B,#F5D078);
+  --ctl-h:clamp(46px,7vh,56px);
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);
+  --ar:"KFGQPC Uthmanic Script HAFS","KFGQPC HAFS Uthmanic Script","Amiri Quran","Scheherazade New","Noto Naskh Arabic","Droid Arabic Naskh","Geeza Pro","Traditional Arabic",serif;
+  --latin:"Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+body{
+  font-family:Helvetica,"Helvetica Neue",Arial,"Noto Sans Tamil","Noto Sans Malayalam",sans-serif;
+  color:var(--tx);background-color:#00291F;
+  background-image:linear-gradient(160deg,#001E17 0%,#00291F 50%,#003B2D 100%);
+  background-attachment:fixed;-webkit-font-smoothing:antialiased;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+}
+input{-webkit-user-select:text;user-select:text}
+button,input{font-family:inherit}
+
+/* ---------- Layout ---------- */
+.app{height:100vh;height:100dvh;display:flex;flex-direction:column;padding:var(--sat) 0 var(--sab)}
+.main{
+  flex:1;min-height:0;width:min(1240px,100%);align-self:center;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(10px,2vw,26px);
+  padding:clamp(10px,2vh,20px) max(clamp(12px,3vw,32px),var(--sar)) clamp(10px,2vh,20px) max(clamp(12px,3vw,32px),var(--sal));
+}
+.card{border-radius:clamp(18px,2.4vw,26px);border:1px solid var(--bd-w);box-shadow:0 14px 36px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.05);min-height:0;min-width:0}
+.info{background:linear-gradient(160deg,rgba(0,96,68,.26),rgba(0,59,45,.5));display:flex;padding:clamp(14px,3vh,30px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;text-align:center;scrollbar-width:thin;scrollbar-color:rgba(230,198,107,.45) transparent}
+.info-inner{margin:auto;width:100%}
+.d-ar{font-family:var(--ar);font-weight:400;color:var(--tx);line-height:1.9;font-size:clamp(35px,min(6vw,9.2vh),76px)}
+.d-trans{margin:clamp(32px,6vh,60px) auto 0;max-width:40ch;display:grid;gap:clamp(8px,1.4vh,14px)}
+.tr-row+.tr-row{padding-top:clamp(8px,1.4vh,14px);border-top:1px solid rgba(230,198,107,.2)}
+.tr-txt{color:var(--tx2);line-height:1.55;font-size:clamp(13px,.9vw + 1vh,18px);overflow-wrap:break-word}
+.tr-row[lang="ta"]{font-family:"Noto Sans Tamil","Nirmala UI","Latha","Tamil Sangam MN","Tamil MN",sans-serif}
+.tr-row[lang="ml"]{font-family:"Noto Sans Malayalam","Nirmala UI","Kartika","Malayalam Sangam MN","Malayalam MN",sans-serif}
+
+.counter{
+  position:relative;display:flex;flex-direction:column;gap:clamp(6px,1.2vh,12px);overflow:hidden;
+  padding:clamp(10px,1.8vh,20px);border-color:var(--bd-gold);background:linear-gradient(165deg,#003A2C,#00291F 90%);
+}
+.counter::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;border:1.5px solid var(--gold-l);opacity:0}
+.counter.glow::after{animation:ringGlow 2s ease-out}
+.done-msg{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:5;pointer-events:none;opacity:0;
+  max-width:92%;text-align:center;padding:9px 20px;border-radius:18px;background:var(--gold-grad);color:var(--tx-gold);
+  font-weight:700;font-size:clamp(14px,1.6vh + .5vw,19px);line-height:1.35;box-shadow:0 10px 28px rgba(0,0,0,.4);
+}
+.done-msg.show{animation:msgShow 2.2s ease forwards}
+.stage{flex:1;min-height:0;position:relative;container-type:size}
+.progress-meta{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:clamp(12px,1.9vh,14px);color:var(--tx3)}
+.progress-meta b{color:var(--gold);font-weight:700}
+.bar{height:6px;border-radius:6px;background:rgba(0,0,0,.35);overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
+.bar i{display:block;height:100%;width:0;border-radius:6px;background:var(--gold-grad);transition:width .25s ease}
+
+[data-tap]{cursor:pointer}
+
+/* ---------- Digital Tasbeeh (your artwork) ---------- */
+.device{
+  position:absolute;inset:0;margin:auto;
+  width:min(100cqw,calc(100cqh * .8427));height:min(100cqh,calc(100cqw / .8427));
+  background:url("images/digitalcounter_3.png") center/100% 100% no-repeat;
+  filter:drop-shadow(0 10px 12px rgba(0,0,0,.45));
+}
+.lcd{position:absolute;left:36%;top:19.4%;width:46%;height:22%;overflow:hidden}
+.lcd-svg{width:100%;height:100%;display:block}
+.seg.on{fill:#12170f;filter:drop-shadow(1px 1.6px .8px rgba(0,0,0,.3))}
+.seg.ghost{fill:rgba(30,45,25,.12)}
+.seg.off{fill:rgba(30,45,25,.07)}
+.lcd.pop .lcd-svg{animation:numPop .2s ease}
+.dev-reset,.bigbtn{position:absolute;aspect-ratio:1;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;transition:background .1s ease,transform .1s ease}
+.dev-reset{left:66.8%;top:49.8%;width:15.9%}
+.bigbtn{left:28.9%;top:58.4%;width:40.9%}
+.dev-reset:active,.bigbtn:active,.bigbtn.pulse{background:radial-gradient(circle,rgba(0,0,0,.28) 55%,rgba(0,0,0,.08) 100%);transform:scale(.97)}
+
+/* ---------- Control buttons (inside the counter card) ---------- */
+.nav{
+  flex:none;display:flex;justify-content:center;width:100%;
+  padding:6px max(clamp(12px,3vw,32px),var(--sar)) 8px max(clamp(12px,3vw,32px),var(--sal));
+  background:transparent;border:0;
+}
+.nav-inner{width:min(720px,100%);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(6px,1.2vw,10px)}
+.nav button{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-height:var(--ctl-h);min-width:0;background:rgba(0,13,8,.45);border:1px solid #977529BF;border-radius:14px;
+  padding:5px 2px;color:var(--tx2);cursor:pointer;font-size:clamp(10px,2.6vw,12.5px);transition:background .15s,border-color .15s;
+}
+.nav .ico{width:clamp(18px,3vh,24px);height:clamp(18px,3vh,24px);color:var(--gold);transition:transform .15s}
+.nav .ico svg{width:100%;height:100%;display:block}
+.nav .lbl{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.nav button:active .ico{transform:scale(.9)}
+.nav button.active{border-color:var(--gold);background:rgba(230,198,107,.1)}
+.nav button.active .lbl{color:var(--gold-l)}
+
+/* ---------- Sheets & dialogs ---------- */
+.overlay{position:fixed;left:0;right:0;top:0;bottom:0;z-index:40;background:rgba(0,10,8,.55);animation:fadeIn .2s ease}
+.sheet{
+  position:fixed;z-index:50;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 24px));
+  bottom:calc(var(--sab) + 12px);
+  max-height:calc(100vh - var(--sab) - var(--sat) - 24px);
+  max-height:calc(100dvh - var(--sab) - var(--sat) - 24px);
+  display:flex;flex-direction:column;background:linear-gradient(170deg,#003B2D,#00291F);
+  border:1px solid var(--bd-w);border-radius:22px;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:sheetIn .25s ease;
+}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px 20px}
+.sheet-head h2{margin:0;font-size:17px;font-weight:700}
+.x{width:40px;height:40px;border-radius:50%;border:1px solid var(--bd-w);background:transparent;color:var(--tx2);display:grid;place-items:center;cursor:pointer}
+.x svg{width:18px;height:18px}
+.sheet-body{padding:4px 16px 18px;overflow:auto;min-height:0}
+.dhikr-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.dhikr-item{
+  width:100%;display:flex;flex-direction:column;gap:2px;text-align:center;padding:12px 14px;border-radius:16px;
+  border:1px solid var(--bd-w);background:rgba(0,96,68,.18);color:var(--tx);cursor:pointer;font-size:14px;
+}
+.dhikr-item.on{border-color:var(--bd-gold);background:rgba(230,198,107,.1)}
+.di-ar{font-family:var(--ar);font-weight:400;font-size:26px;line-height:1.8}
+.sec{margin-bottom:18px}
+.sec:last-child{margin-bottom:0}
+.sec-title{font-size:13px;font-weight:600;color:var(--tx3);margin-bottom:8px;letter-spacing:.02em}
+.chips{display:flex;gap:8px}
+.chip{flex:1 1 0;min-height:46px;border-radius:14px;border:1px solid var(--bd-w);background:rgba(255,255,255,.04);color:var(--tx);font-size:15px;font-weight:700;cursor:pointer}
+.chip.on{background:var(--gold-grad);color:var(--tx-gold);border-color:transparent}
+.custom{display:flex;gap:8px}
+.custom input{flex:1;min-width:0;height:46px;border-radius:14px;border:1px solid var(--bd-w);background:rgba(0,30,23,.6);color:var(--tx);padding:0 14px;font-size:16px;outline:none}
+.custom input:focus{border-color:var(--bd-gold)}
+.err{min-height:18px;margin-top:6px;font-size:12.5px;color:var(--gold-l)}
+.gold-btn{height:46px;padding:0 20px;border:0;border-radius:14px;background:var(--gold-grad);color:var(--tx-gold);font-size:15px;font-weight:700;cursor:pointer}
+.ghost-btn{height:46px;padding:0 20px;border-radius:14px;border:1px solid var(--bd-w);background:transparent;color:var(--tx);font-size:15px;font-weight:600;cursor:pointer}
+.dialog{
+  position:fixed;z-index:55;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 40px));
+  padding:22px;text-align:center;background:linear-gradient(170deg,#003B2D,#00291F);border:1px solid var(--bd-gold);
+  border-radius:22px;box-shadow:0 20px 50px rgba(0,0,0,.55);animation:dlgIn .22s ease;
+}
+.dialog h2{margin:0 0 8px;font-size:18px}
+.dialog p{margin:0;color:var(--tx2);font-size:14.5px;line-height:1.5}
+.dlg-actions{display:flex;gap:10px;margin-top:20px}
+.dlg-actions button{flex:1;padding:0 10px}
+.toast{
+  position:fixed;left:50%;z-index:70;bottom:calc(var(--sab) + 16px);transform:translate(-50%,8px);
+  max-width:min(90vw,420px);padding:10px 16px;border-radius:14px;background:rgba(0,30,23,.96);border:1px solid var(--bd-gold);
+  color:var(--tx);font-size:14px;text-align:center;white-space:pre-line;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- Transitions ---------- */
+.fx{transition:opacity .14s ease}
+.mode-in{animation:modeIn .3s ease}
+.anim-in{animation:infoIn .3s ease}
+@keyframes modeIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes infoIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetIn{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes dlgIn{from{opacity:0;transform:translate(-50%,-48%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes numPop{0%{transform:scale(.92);opacity:.6}100%{transform:scale(1);opacity:1}}
+@keyframes ringGlow{0%{opacity:0;box-shadow:inset 0 0 0 rgba(245,208,120,0)}25%{opacity:.9;box-shadow:inset 0 0 40px rgba(245,208,120,.2)}100%{opacity:0;box-shadow:inset 0 0 0 rgba(245,208,120,0)}}
+@keyframes msgShow{0%{opacity:0;transform:translate(-50%,-8px)}10%{opacity:1;transform:translate(-50%,0)}86%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,0)}}
+
+/* ---------- Responsive ---------- */
+@media (max-width:700px),(orientation:portrait) and (max-width:900px){
+  .main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1.4fr)}
+  .d-ar{font-size:clamp(27px,4.4vh,42px)}
+  .main{padding-top:clamp(8px,1.6vh,14px)}
+  .tr-txt{font-size:clamp(12.5px,1.9vh,16px)}
+  .info{padding:clamp(10px,2vh,18px)}
+}
+@media (max-height:520px){
+  :root{--ctl-h:38px}
+  .nav button{gap:1px;font-size:9.5px}
+  .nav .ico{width:16px;height:16px}
+}
+@media (max-height:520px) and (orientation:landscape){
+  .main{padding-top:6px;padding-bottom:6px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .done-msg.show{animation:none!important;opacity:1}
+}
+
+/* ===== Custom colour scheme ===== */
+:root{
+  --bg:#000D08;
+  --panel:#003D2B;
+  --box:linear-gradient(180deg,#065032 0%,#011A10 100%);
+  --bd-gold:#977529BF;
+}
+/* Page: emerald gradient across the whole viewport (incl. behind the nav) */
+html{min-height:100%;background-color:#011A10;background-image:linear-gradient(180deg,#065032 0%,#011A10 100%);background-attachment:fixed}
+body{background:transparent}
+.card{border:1px solid #977529BF}
+/* Dhikr box: transparent, no border/shadow; gold Arabic, white translations; scrolls inside itself */
+.info{
+  background:transparent;border:0;box-shadow:none;
+  scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:rgba(245,208,120,.35) transparent;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 10px,#000 calc(100% - 10px),transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0,#000 10px,#000 calc(100% - 10px),transparent 100%);
+}
+.info::-webkit-scrollbar{width:4px}
+.info::-webkit-scrollbar-thumb{background:rgba(245,208,120,.35);border-radius:4px}
+.info::-webkit-scrollbar-track{background:transparent}
+.d-ar{color:#F5D078;text-shadow:0 2px 12px rgba(0,30,18,.35)}
+.tr-txt{color:#fff}
+.tr-row+.tr-row{border-top-color:rgba(245,208,120,.28)}
+/* Digital Tasbeeh box: unchanged look + soft floating shadow */
+.counter{
+  background:linear-gradient(180deg,#065032 0%,#011A10 100%);
+  box-shadow:0 26px 46px -6px rgba(0,0,0,.8),0 12px 22px -2px rgba(0,0,0,.55),0 3px 6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05);
+}
+.sheet,.dialog{
+  background:#003D2B;
+  border:1px solid #977529BF;
+}
+.sheet-head{border-bottom:1px solid #977529BF}
+.x{border:1px solid #977529BF}
+.dhikr-item{
+  background:linear-gradient(180deg,#065032 0%,#011A10 100%);
+  border:1px solid #977529BF;
+}
+.dhikr-item.on{border-color:#E6C66B}
+.chip{background:#000D08;border:1px solid #977529BF}
+.chip.on{border-color:transparent}
+.custom input{background:#000D08;border:1px solid #977529BF}
+.custom input:focus{border-color:#E6C66B}
+.ghost-btn{border:1px solid #977529BF}
+.toast{background:#000D08;border:1px solid #977529BF}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <main class="main">
+    <section class="card info" id="infoCard" aria-live="polite">
+      <div class="info-inner fx" id="infoInner">
+        <div class="d-ar" id="dAr" lang="ar" dir="rtl"></div>
+        <div class="d-trans" id="dTrans">
+          <div class="tr-row" lang="en"><div class="tr-txt" id="dEn"></div></div>
+          <div class="tr-row" lang="ta"><div class="tr-txt" id="dTa"></div></div>
+          <div class="tr-row" lang="ml"><div class="tr-txt" id="dMl"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card counter" id="counterArea">
+      <div class="done-msg" id="doneMsg" role="status"></div>
+      <div class="stage" id="stage"></div>
+      <div class="progress fx">
+        <div class="progress-meta"><span id="targetText"></span><span id="countText"></span></div>
+        <div class="bar"><i id="barFill"></i></div>
+      </div>
+    </section>
+  </main>
+
+    <div class="nav" id="nav">
+    <div class="nav-inner">
+    <button type="button" id="navDhikr"><span class="ico" data-icon="book"></span><span class="lbl fx" data-i18n="navDhikr">Dhikr</span></button>
+    <button type="button" id="navCount"><span class="ico" data-icon="hash"></span><span class="lbl fx" data-i18n="navCount">Count</span></button>
+    <button type="button" id="navSound"><span class="ico" id="soundIco"></span><span class="lbl fx" id="soundLbl">Sound</span></button>
+    <button type="button" id="navReset"><span class="ico" data-icon="reset"></span><span class="lbl fx" data-i18n="navReset">Reset</span></button>
+    </div>
+    </div>
+</div>
+
+
+
+<div class="overlay" id="overlay" hidden></div>
+
+<section class="sheet" id="dhikrSheet" role="dialog" aria-modal="true" hidden>
+  <div class="sheet-head">
+    <h2 class="fx" data-i18n="selectDhikr">Select Dhikr</h2>
+    <button type="button" class="x" data-close data-i18n-aria="close" data-icon="close"></button>
+  </div>
+  <div class="sheet-body fx"><ul class="dhikr-list" id="dhikrList"></ul></div>
+</section>
+
+<section class="sheet" id="countSheet" role="dialog" aria-modal="true" hidden>
+  <div class="sheet-head">
+    <h2 class="fx" data-i18n="countSettings">Count Settings</h2>
+    <button type="button" class="x" data-close data-i18n-aria="close" data-icon="close"></button>
+  </div>
+  <div class="sheet-body fx">
+    <div class="sec">
+      <div class="sec-title" data-i18n="target">Target</div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-title" data-i18n="customTarget">Custom target</div>
+      <div class="custom">
+        <input id="customInput" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" data-i18n-ph="enterNumber" placeholder="Enter a number">
+        <button type="button" class="gold-btn" id="setCustom" data-i18n="set">Set</button>
+      </div>
+      <div class="err" id="customErr" role="alert"></div>
+    </div>
+  </div>
+</section>
+
+<section class="dialog" id="confirmDialog" role="alertdialog" aria-modal="true" hidden>
+  <h2 data-i18n="resetTitle">Reset counter?</h2>
+  <p data-i18n="resetText">The count will return to 0.</p>
+  <div class="dlg-actions">
+    <button type="button" class="ghost-btn" id="cancelReset" data-i18n="cancel">Cancel</button>
+    <button type="button" class="gold-btn" id="confirmReset" data-i18n="confirmReset">Reset</button>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+'use strict';
+
+/* =====================================================================
+   1. DHIKR DATA
+   ===================================================================== */
+const DHIKR = [
+  { id: 1, ar: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
+    tr: { en: 'SubhanAllahi wa bihamdihi', ta: 'ஸுப்ஹானல்லாஹி வ பிஹம்திஹி', ml: 'സുബ്ഹാനല്ലാഹി വ ബിഹംദിഹി' },
+    mean: { en: 'Glory be to Allah and praise be to Him.', ta: 'அல்லாஹ் தூயவன்; அவனுக்கே புகழனைத்தும்.', ml: 'അല്ലാഹു പരിശുദ്ധൻ; അവന് സ്തുതി.' } },
+  { id: 2, ar: 'الْحَمْدُ لِلَّهِ',
+    tr: { en: 'Alhamdulillah', ta: 'அல்ஹம்துலில்லாஹ்', ml: 'അൽഹംദുലില്ലാഹ്' },
+    mean: { en: 'All praise is due to Allah.', ta: 'எல்லாப் புகழும் அல்லாஹ்வுக்கே.', ml: 'സർവ്വസ്തുതിയും അല്ലാഹുവിനാണ്.' } },
+  { id: 3, ar: 'اللَّهُ أَكْبَرُ',
+    tr: { en: 'Allahu Akbar', ta: 'அல்லாஹு அக்பர்', ml: 'അല്ലാഹു അക്ബർ' },
+    mean: { en: 'Allah is the Greatest.', ta: 'அல்லாஹ் மிகப் பெரியவன்.', ml: 'അല്ലാഹു ഏറ്റവും വലിയവനാണ്.' } },
+  { id: 4, ar: 'لَا إِلَٰهَ إِلَّا اللَّهُ',
+    tr: { en: 'La ilaha illallah', ta: 'லா இலாஹ இல்லல்லாஹ்', ml: 'ലാ ഇലാഹ ഇല്ലല്ലാഹ്' },
+    mean: { en: 'There is no deity worthy of worship except Allah.', ta: 'அல்லாஹ்வைத் தவிர வணக்கத்திற்குரிய இறைவன் வேறு யாருமில்லை.', ml: 'അല്ലാഹുവല്ലാതെ ആരാധനയ്ക്കർഹനായി മറ്റൊരു ദൈവമില്ല.' } },
+  { id: 5, ar: 'أَسْتَغْفِرُ اللَّهَ',
+    tr: { en: 'Astaghfirullah', ta: 'அஸ்தக்ஃபிருல்லாஹ்', ml: 'അസ്തഗ്ഫിറുല്ലാഹ്' },
+    mean: { en: 'I seek forgiveness from Allah.', ta: 'அல்லாஹ்விடம் நான் மன்னிப்புத் தேடுகிறேன்.', ml: 'ഞാൻ അല്ലാഹുവിനോട് പൊറുതി തേടുന്നു.' } },
+  { id: 6, ar: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ',
+    tr: { en: "SubhanAllahi wa bihamdihi, SubhanAllahil 'Azeem", ta: 'ஸுப்ஹானல்லாஹி வ பிஹம்திஹி, ஸுப்ஹானல்லாஹில் அழீம்', ml: 'സുബ്ഹാനല്ലാഹി വ ബിഹംദിഹി, സുബ്ഹാനല്ലാഹിൽ അളീം' },
+    mean: { en: 'Glory and praise be to Allah, Glory be to Allah the Most Great.', ta: 'அல்லாஹ் தூயவன், அவனுக்கே புகழ்; மகத்தான அல்லாஹ் தூயவன்.', ml: 'അല്ലാഹു പരിശുദ്ധൻ, അവന് സ്തുതി; മഹാനായ അല്ലാഹു പരിശുദ്ധൻ.' } },
+  { id: 7, ar: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',
+    tr: { en: 'La hawla wa la quwwata illa billah', ta: 'லா ஹவ்ல வலா குவ்வத இல்லா பில்லாஹ்', ml: 'ലാ ഹൗല വലാ ഖുവ്വത ഇല്ലാ ബില്ലാഹ്' },
+    mean: { en: 'There is no power and no strength except with Allah.', ta: 'அல்லாஹ்வின் உதவியின்றி எந்த ஆற்றலும் வலிமையும் இல்லை.', ml: 'അല്ലാഹുവിന്റെ സഹായമില്ലാതെ ഒരു ശക്തിയും കഴിവുമില്ല.' } },
+  { id: 8, ar: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ',
+    tr: { en: "Hasbunallahu wa ni'mal wakeel", ta: 'ஹஸ்புனல்லாஹு வ நிஃமல் வகீல்', ml: 'ഹസ്ബുനല്ലാഹു വ നിഅ്മൽ വകീൽ' },
+    mean: { en: 'Allah is sufficient for us, and He is the best disposer of affairs.', ta: 'எங்களுக்கு அல்லாஹ்வே போதுமானவன்; அவனே சிறந்த பொறுப்பாளன்.', ml: 'ഞങ്ങൾക്ക് അല്ലാഹു മതി; അവനാണ് ഏറ്റവും നല്ല കാര്യകർത്താവ്.' } },
+  { id: 9, ar: 'رَبِّ زِدْنِي عِلْمًا',
+    tr: { en: "Rabbi zidni 'ilma", ta: 'ரப்பி ஸித்னீ இல்மா', ml: 'റബ്ബി സിദ്നീ ഇൽമാ' },
+    mean: { en: 'My Lord, increase me in knowledge.', ta: 'என் இறைவா, எனக்கு ஞானத்தை அதிகப்படுத்துவாயாக.', ml: 'എന്റെ നാഥാ, എനിക്ക് അറിവ് വർധിപ്പിച്ചു തരേണമേ.' } },
+  { id: 10, ar: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',
+    tr: { en: "Allahumma salli 'ala Muhammad", ta: 'அல்லாஹும்ம ஸல்லி அலா முஹம்மத்', ml: 'അല്ലാഹുമ്മ സല്ലി അലാ മുഹമ്മദ്' },
+    mean: { en: 'O Allah, send blessings upon Muhammad.', ta: 'யா அல்லாஹ், முஹம்மத் (ஸல்) அவர்கள் மீது அருள் பொழிவாயாக.', ml: 'അല്ലാഹുവേ, മുഹമ്മദ് നബിയുടെ മേൽ അനുഗ്രഹം ചൊരിയേണമേ.' } }
+];
+
+/* =====================================================================
+   2. LANGUAGE TRANSLATIONS
+   ===================================================================== */
+const I18N = {
+  en: {
+    appTitle: 'Tasbeeh Counter', navDhikr: 'Dhikr', navCount: 'Count', navReset: 'Reset',
+    soundShort: ['Sound', 'Silent', 'Vibrate', 'Both'],
+    soundFull: ['Sound On', 'Silent', 'Vibrate Only', 'Sound + Vibrate'],
+    selectDhikr: 'Select Dhikr', countSettings: 'Count Settings', target: 'Target', customTarget: 'Custom target', set: 'Set',
+    enterNumber: 'Enter a number', invalidTarget: 'Enter a whole number greater than 0',
+    completed: 'Masha Allah, target reached', resetTitle: 'Reset counter?', resetText: 'The count will return to 0.',
+    cancel: 'Cancel', confirmReset: 'Reset', close: 'Close',
+    noVibrate: 'Vibration is not supported on this device', tapToCount: 'Tap to count'
+  },
+  ta: {
+    appTitle: 'தஸ்பீஹ் கவுண்டர்', navDhikr: 'திக்ர்', navCount: 'எண்ணிக்கை', navReset: 'மீட்டமை',
+    soundShort: ['ஒலி', 'அமைதி', 'அதிர்வு', 'இரண்டும்'],
+    soundFull: ['ஒலி இயக்கம்', 'அமைதி', 'அதிர்வு மட்டும்', 'ஒலி + அதிர்வு'],
+    selectDhikr: 'திக்ரைத் தேர்ந்தெடுக்கவும்', countSettings: 'எண்ணிக்கை அமைப்புகள்', target: 'இலக்கு', customTarget: 'விருப்ப இலக்கு', set: 'அமை',
+    enterNumber: 'எண்ணை உள்ளிடவும்', invalidTarget: '0-ஐ விடப் பெரிய முழு எண்ணை உள்ளிடவும்',
+    completed: 'மாஷா அல்லாஹ், இலக்கை அடைந்தீர்கள்', resetTitle: 'எண்ணிக்கையை மீட்டமைக்கவா?', resetText: 'எண்ணிக்கை 0 ஆக மாறும்.',
+    cancel: 'ரத்து செய்', confirmReset: 'மீட்டமை', close: 'மூடு',
+    noVibrate: 'இந்தச் சாதனத்தில் அதிர்வு ஆதரிக்கப்படவில்லை', tapToCount: 'எண்ண தொடவும்'
+  },
+  ml: {
+    appTitle: 'തസ്ബീഹ് കൗണ്ടർ', navDhikr: 'ദിക്ർ', navCount: 'എണ്ണം', navReset: 'റീസെറ്റ്',
+    soundShort: ['ശബ്ദം', 'നിശബ്ദം', 'വൈബ്രേറ്റ്', 'രണ്ടും'],
+    soundFull: ['ശബ്ദം ഓൺ', 'നിശബ്ദം', 'വൈബ്രേറ്റ് മാത്രം', 'ശബ്ദം + വൈബ്രേറ്റ്'],
+    selectDhikr: 'ദിക്ർ തിരഞ്ഞെടുക്കുക', countSettings: 'എണ്ണൽ ക്രമീകരണങ്ങൾ', target: 'ലക്ഷ്യം', customTarget: 'ഇഷ്ടാനുസൃത ലക്ഷ്യം', set: 'സെറ്റ്',
+    enterNumber: 'സംഖ്യ നൽകുക', invalidTarget: '0-ൽ കൂടുതലുള്ള ഒരു പൂർണ്ണസംഖ്യ നൽകുക',
+    completed: 'മാഷാ അല്ലാഹ്, ലക്ഷ്യം പൂർത്തിയായി', resetTitle: 'എണ്ണം റീസെറ്റ് ചെയ്യട്ടേ?', resetText: 'എണ്ണം 0 ആകും.',
+    cancel: 'റദ്ദാക്കുക', confirmReset: 'റീസെറ്റ്', close: 'അടയ്ക്കുക',
+    noVibrate: 'ഈ ഉപകരണത്തിൽ വൈബ്രേഷൻ പിന്തുണയ്ക്കുന്നില്ല', tapToCount: 'എണ്ണാൻ തൊടുക'
+  }
+};
+
+/* =====================================================================
+   3. PERSISTENCE + STATE
+   ===================================================================== */
+const PRESETS = [33, 99, 100, 1000];
+const MAX_TARGET = 999999999;
+const ADVANCE_DELAY = 2200;     // ms the "target reached" message stays before reset + next Dhikr
+const DEFAULTS = { count: 0, dhikrId: 1, lang: 'en', mode: 'digital', sound: 0, target: 33 };
+
+const Store = {
+  key: 'bismeRadioTasbeeh.v1',
+  load() { try { return JSON.parse(localStorage.getItem(this.key)) || {}; } catch (e) { return {}; } },
+  save(s) { try { localStorage.setItem(this.key, JSON.stringify(s)); } catch (e) { /* storage unavailable */ } }
+};
+
+const state = Object.assign({}, DEFAULTS, Store.load());
+(function sanitize() {
+  const c = Number(state.count);
+  state.count = Number.isFinite(c) && c >= 0 ? Math.floor(c) : 0;
+  if (!DHIKR.some(d => d.id === state.dhikrId)) state.dhikrId = 1;
+  state.lang = 'en';                                   // interface labels stay English; all 3 translations show together
+  state.mode = 'digital';                              // Digital Tasbeeh only; migrates any saved mode: 'string'
+  if ([0, 1, 2, 3].indexOf(state.sound) < 0) state.sound = 0;
+  if (!(Number.isInteger(state.target) && state.target > 0 && state.target <= MAX_TARGET)) state.target = 33;
+  delete state.tapAnywhere; delete state.sv;   // tap-anywhere is now always on
+})();
+
+/* =====================================================================
+   4. COUNTER LOGIC
+   ===================================================================== */
+const Counter = {
+  inc() { state.count += 1; return state.count; },
+  reset() { state.count = 0; },
+  setTarget(n) { state.target = n; },
+  isComplete() { return state.count >= state.target; },
+  progress() { return Math.min(1, state.count / state.target); }
+};
+
+/* =====================================================================
+   5. SOUND MANAGER
+   ===================================================================== */
+const Sound = {
+  ctx: null,
+  canVibrate: typeof navigator.vibrate === 'function',
+  ensure() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) { try { this.ctx = new AC(); } catch (e) { this.ctx = null; } }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') { try { this.ctx.resume(); } catch (e) {} }
+    return this.ctx;
+  },
+  wantsAudio() { return state.sound === 0 || state.sound === 3; },
+  wantsVibe() { return state.sound === 2 || state.sound === 3; },
+  beep(freq, dur, vol, type, delay) {
+    const ctx = this.ensure(); if (!ctx) return;
+    const t0 = ctx.currentTime + (delay || 0);
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.03);
+  },
+  vibrate(p) { if (this.canVibrate) { try { navigator.vibrate(0); navigator.vibrate(p); } catch (e) {} } },
+  tick() {
+    if (this.wantsAudio()) { this.beep(720, 0.06, 0.16, 'triangle'); this.beep(360, 0.08, 0.1, 'sine'); }
+    if (this.wantsVibe()) this.vibrate(35);
+  },
+  done() {
+    if (this.wantsAudio()) { this.beep(880, 0.22, 0.18, 'sine'); this.beep(1175, 0.35, 0.16, 'sine', 0.14); }
+    if (this.wantsVibe()) this.vibrate([60, 50, 60, 50, 120]);
+  }
+};
+
+/* =====================================================================
+   6. HELPERS / ICONS
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const L = () => I18N[state.lang];
+const t = k => L()[k];
+const getDhikr = () => DHIKR.find(d => d.id === state.dhikrId) || DHIKR[0];
+const prefersReduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function retrigger(el, cls) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+
+const ICONS = {
+  book: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
+  volOn: '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
+  volOff: '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>',
+  vib: '<path d="m2 8 2 2-2 2 2 2-2 2"/><path d="m22 8-2 2 2 2-2 2 2 2"/><path d="M8 8v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V8c0-.55-.45-1-1-1H9c-.55 0-1 .45-1 1Z"/>',
+  both: '<path d="M10 5 6 9H2v6h4l4 4V5z"/><path d="m14 9 2 2-2 2 2 2"/><path d="m19 8 2 2.5-2 2.5 2 2.5"/>',
+  hash: '<path d="M4 9h16"/><path d="M4 15h16"/><path d="m10 3-2 18"/><path d="m16 3-2 18"/>',
+  reset: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+  rotateCw: '<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>',
+  close: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
+};
+const SOUND_ICONS = ['volOn', 'volOff', 'vib', 'both'];
+const icon = n => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[n] + '</svg>';
+
+/* =====================================================================
+   7. TASBEEH RENDERING
+   ===================================================================== */
+const stage = $('#stage');
+let ui = {};
+
+/* ---- Seven-segment LCD (digital mode) ---- */
+const SEG = {
+  a: '4,4 8,0 44,0 48,4 44,8 8,8',
+  g: '4,46 8,42 44,42 48,46 44,50 8,50',
+  d: '4,88 8,84 44,84 48,88 44,92 8,92',
+  f: '4,5 8,9 8,41 4,45 0,41 0,9',
+  b: '48,5 52,9 52,41 48,45 44,41 44,9',
+  e: '4,47 8,51 8,83 4,87 0,83 0,51',
+  c: '48,47 52,51 52,83 48,87 44,83 44,51'
+};
+const DIGIT_SEGS = ['abcdef', 'bc', 'abdeg', 'abcdg', 'bcfg', 'acdfg', 'acdefg', 'abc', 'abcdefg', 'abcdfg'];
+
+function lcdSvg(n) {
+  const str = String(n);
+  const total = Math.max(4, str.length);
+  const digits = str.padStart(total, '0');
+  const lead = total - str.length;           // leading zeros are drawn faint
+  const W = total * 68 - 16;
+  let out = '<svg class="lcd-svg" viewBox="0 0 ' + W + ' 92" preserveAspectRatio="xMaxYMid meet" aria-hidden="true">';
+  for (let i = 0; i < total; i++) {
+    const on = DIGIT_SEGS[+digits[i]];
+    const ghost = i < lead;
+    out += '<g transform="translate(' + (i * 68) + ' 0)">';
+    'abcdefg'.split('').forEach(k => {
+      const lit = on.indexOf(k) >= 0;
+      out += '<polygon class="seg ' + (lit ? (ghost ? 'ghost' : 'on') : 'off') + '" points="' + SEG[k] + '"/>';
+    });
+    out += '</g>';
+  }
+  return out + '</svg>';
+}
+
+function digitalMarkup() {
+  return '<div class="device" id="device">' +
+    '<div class="lcd" id="lcd" role="img"></div>' +
+    '<button type="button" class="dev-reset" id="devReset" aria-label="' + t('navReset') + '"></button>' +
+    '<button type="button" class="bigbtn" id="bigBtn" data-tap aria-label="' + t('tapToCount') + '"></button>' +
+  '</div>';
+}
+
+function buildStage() {
+  stage.innerHTML = digitalMarkup();
+  ui = { lcd: $('#lcd'), bigBtn: $('#bigBtn'), devReset: $('#devReset') };
+  if (ui.devReset) ui.devReset.addEventListener('click', () => openSheet('confirm'));
+  updateCountUI(false);
+  retrigger(stage, 'mode-in');
+}
+
+function updateStageText() {
+  if (ui.bigBtn) ui.bigBtn.setAttribute('aria-label', t('tapToCount'));
+  if (ui.devReset) ui.devReset.setAttribute('aria-label', t('navReset'));
+  const lbl = $('#devLabel'); if (lbl) lbl.textContent = t('navCount');
+}
+
+function updateProgress() {
+  $('#targetText').textContent = t('target') + ': ' + state.target;
+  $('#countText').innerHTML = '<b>' + state.count + '</b> / ' + state.target;
+  $('#barFill').style.width = (Counter.progress() * 100).toFixed(1) + '%';
+}
+
+function updateCountUI(animate) {
+  if (ui.lcd) {
+    ui.lcd.innerHTML = lcdSvg(state.count);
+    ui.lcd.setAttribute('aria-label', String(state.count));
+    if (animate) retrigger(ui.lcd, 'pop');
+  }
+  updateProgress();
+}
+
+/* =====================================================================
+   8. DHIKR DISPLAY
+   ===================================================================== */
+function renderInfo(animate) {
+  const d = getDhikr();
+  $('#dAr').textContent = d.ar;
+  $('#dEn').textContent = d.mean.en;
+  $('#dTa').textContent = d.mean.ta;
+  $('#dMl').textContent = d.mean.ml;
+  if (animate) retrigger($('#infoInner'), 'anim-in');
+}
+
+function renderDhikrList() {
+  const ul = $('#dhikrList');
+  ul.innerHTML = '';
+  DHIKR.forEach(d => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'dhikr-item' + (d.id === state.dhikrId ? ' on' : '');
+    const ar = document.createElement('span'); ar.className = 'di-ar'; ar.lang = 'ar'; ar.dir = 'rtl'; ar.textContent = d.ar;
+    b.appendChild(ar);
+    b.addEventListener('click', () => selectDhikr(d.id));
+    li.appendChild(b); ul.appendChild(li);
+  });
+}
+
+function selectDhikr(id) {
+  settlePending();
+  state.dhikrId = id; Store.save(state);
+  renderInfo(true); renderDhikrList(); closeSheets();
+}
+
+/* =====================================================================
+   9. LANGUAGE / SOUND
+   ===================================================================== */
+function renderSoundNav() {
+  $('#soundIco').innerHTML = icon(SOUND_ICONS[state.sound]);
+  $('#soundLbl').textContent = L().soundShort[state.sound];
+  $('#navSound').setAttribute('aria-label', L().soundFull[state.sound]);
+}
+
+function applyLanguage() {
+  document.documentElement.lang = state.lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
+  $('#doneMsg').textContent = t('completed');
+  renderSoundNav(); renderInfo(false); renderDhikrList(); updateProgress(); updateStageText();
+}
+
+function cycleSound() {
+  state.sound = (state.sound + 1) % 4;
+  Store.save(state);
+  renderSoundNav();
+  let msg = L().soundFull[state.sound];
+  if (Sound.wantsVibe() && !Sound.canVibrate) msg += '\n' + t('noVibrate');
+  toast(msg);
+  if (Sound.wantsAudio()) Sound.beep(660, 0.09, 0.15, 'triangle');
+  if (Sound.wantsVibe()) Sound.vibrate(20);
+}
+
+/* =====================================================================
+   10. COUNTING ACTIONS  (target reached → message → reset → next Dhikr)
+   ===================================================================== */
+let advancing = false, advanceTimer = 0;
+
+function pulseTap() {
+  retrigger(ui.bigBtn, 'pulse'); setTimeout(() => ui.bigBtn && ui.bigBtn.classList.remove('pulse'), 130);
+}
+
+function hideDone() { $('#doneMsg').classList.remove('show'); }
+
+function celebrate() {
+  $('#doneMsg').textContent = t('completed');
+  retrigger($('#counterArea'), 'glow');
+  retrigger($('#doneMsg'), 'show');
+}
+
+function completeTarget() {
+  advancing = true;
+  Sound.done();
+  celebrate();
+  clearTimeout(advanceTimer);
+  advanceTimer = setTimeout(advanceDhikr, ADVANCE_DELAY);
+}
+
+function advanceDhikr() {
+  advancing = false;
+  hideDone();
+  Counter.reset();
+  const idx = DHIKR.findIndex(d => d.id === state.dhikrId);
+  state.dhikrId = DHIKR[(idx + 1) % DHIKR.length].id;   // after #10 → back to #1
+  updateCountUI(false);
+  renderInfo(true);
+  renderDhikrList();
+  Store.save(state);
+}
+
+/* If the user changes Dhikr / target / resets while the message is showing */
+function settlePending() {
+  if (!advancing) return;
+  clearTimeout(advanceTimer);
+  advancing = false;
+  hideDone();
+  Counter.reset();
+  updateCountUI(false);
+}
+
+function tap() {
+  if (advancing) return;
+  Counter.inc();
+  const done = Counter.isComplete();
+  updateCountUI(true);
+  pulseTap();
+  Store.save(state);
+  if (done) completeTarget(); else Sound.tick();
+}
+
+function doReset() {
+  settlePending();
+  Counter.reset();
+  updateCountUI(false);
+  Store.save(state);
+}
+
+/* =====================================================================
+   11. SHEETS, DIALOGS, TOAST, NAVIGATION
+   ===================================================================== */
+const overlay = $('#overlay');
+const sheets = { dhikr: $('#dhikrSheet'), count: $('#countSheet'), confirm: $('#confirmDialog') };
+const navFor = { dhikr: $('#navDhikr'), count: $('#navCount') };
+let currentSheet = null;
+
+function setNavActive(name) {
+  Object.keys(navFor).forEach(k => navFor[k].classList.toggle('active', k === name));
+}
+function closeSheets() {
+  Object.keys(sheets).forEach(k => { sheets[k].hidden = true; });
+  overlay.hidden = true; currentSheet = null; setNavActive(null);
+}
+function openSheet(name) {
+  closeSheets();
+  if (name === 'count') {
+    $('#customInput').value = PRESETS.indexOf(state.target) >= 0 ? '' : String(state.target);
+    $('#customErr').textContent = '';
+    renderChips();
+  }
+  if (name === 'dhikr') renderDhikrList();
+  overlay.hidden = false; sheets[name].hidden = false; currentSheet = name; setNavActive(name);
+}
+function toggleSheet(name) { if (currentSheet === name) closeSheets(); else openSheet(name); }
+
+let toastTimer = 0;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+function renderChips() {
+  const box = $('#chips'); box.innerHTML = '';
+  PRESETS.forEach(n => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip' + (state.target === n ? ' on' : ''); b.textContent = n;
+    b.addEventListener('click', () => { setTarget(n); $('#customInput').value = ''; });
+    box.appendChild(b);
+  });
+}
+function setTarget(n) {
+  settlePending();
+  Counter.setTarget(n); Store.save(state);
+  $('#customErr').textContent = '';
+  renderChips(); updateProgress();
+}
+function applyCustom() {
+  const raw = $('#customInput').value.trim();
+  const n = /^\d+$/.test(raw) ? parseInt(raw, 10) : NaN;
+  if (!(n >= 1 && n <= MAX_TARGET)) { $('#customErr').textContent = t('invalidTarget'); return; }
+  setTarget(n);
+  toast(t('target') + ': ' + n);
+}
+
+/* =====================================================================
+   12. TAP HANDLING  (tap anywhere inside the counter section only)
+   ===================================================================== */
+const NO_COUNT = 'button,input,textarea,select,a,label,[role="dialog"],[role="alertdialog"],.nav,.sheet,.dialog,.overlay,.toast,[data-notap]';
+
+document.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  if (currentSheet) return;                              // panels / dialogs open: never count
+  const target = e.target;
+  if (!(target instanceof Element)) return;
+  const counterArea = target.closest('#counterArea');
+  if (!counterArea) return;                              // never count taps on the Dhikr card, title, nav, or elsewhere
+  if (target.closest('[data-tap]')) { tap(); return; }   // digital counting button: count
+  if (!target.closest(NO_COUNT)) tap();                  // blank space inside the counter section: count
+});
+document.addEventListener('click', e => {                // keyboard activation (Enter / Space) on the counting controls
+  if (e.detail === 0 && !currentSheet && e.target instanceof Element &&
+      e.target.closest('#counterArea') && e.target.closest('[data-tap]')) tap();
+});
+
+/* =====================================================================
+   13. INITIALISATION
+   ===================================================================== */
+function init() {
+  document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = icon(el.getAttribute('data-icon')); });
+
+  $('#navDhikr').addEventListener('click', () => toggleSheet('dhikr'));
+  $('#navCount').addEventListener('click', () => toggleSheet('count'));
+  $('#navSound').addEventListener('click', cycleSound);
+  $('#navReset').addEventListener('click', () => openSheet('confirm'));
+
+  overlay.addEventListener('click', closeSheets);
+  document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeSheets));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheets(); });
+
+  $('#cancelReset').addEventListener('click', closeSheets);
+  $('#confirmReset').addEventListener('click', () => { doReset(); closeSheets(); });
+
+  $('#setCustom').addEventListener('click', applyCustom);
+  $('#customInput').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 9); $('#customErr').textContent = ''; });
+  $('#customInput').addEventListener('keydown', e => { if (e.key === 'Enter') applyCustom(); });
+
+  buildStage();
+  applyLanguage();
+  renderChips();
+  Store.save(state);
+}
+init();
+
+})();
+</script>
+</body>
+</html>
