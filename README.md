@@ -3,18 +3,15 @@
 ## Overview
 BISME RADIO – Tasbeeh Counter is a responsive, interactive digital Tasbeeh application designed to make daily Dhikr counting simple and convenient.
 
-The application provides two counting interfaces: a traditional Tasbeeh bead interface and a digital Tasbeeh counter. It supports multiple languages, customizable counting targets, sound and vibration feedback, and automatic progress saving.
 
 ## Features
 
-- **Two Tasbeeh Modes:** Traditional String Tasbeeh and Digital Tasbeeh.
 - **Multiple Languages:** English, Tamil, and Malayalam.
 - **Dhikr Collection:** Includes 10 Dhikr entries with Arabic text, transliteration, and meaning.
 - **Custom Counting Targets:** Preset targets of 33, 99, 100, and 1000, with support for custom targets.
 - **Progress Tracking:** Displays the current count and progress towards the selected target.
 - **Sound and Vibration:** Supports sound, silent, vibration-only, and sound-plus-vibration modes.
 - **Automatic Dhikr Progression:** Automatically moves to the next Dhikr after completing the selected target.
-- **Automatic Data Saving:** Remembers the counter state, selected Dhikr, language, counting mode, sound settings, and target using browser Local Storage.
 - **Responsive Design:** Optimized for mobile phones, tablets, and desktop screens.
 - **Reset Option:** Allows users to reset the current count.
 
@@ -32,7 +29,7 @@ Tasbeeh-Counter/
 1. Open `Tasbeeh counter Updated.html` in a modern web browser.
 2. Select your preferred Dhikr.
 3. Choose a counting target.
-4. Tap the Tasbeeh beads or digital counter to start counting.
+4. Tap the digital counter to start counting.
 5. Change the language or sound settings whenever required.
 6. Use the reset option to restart your count.
 
